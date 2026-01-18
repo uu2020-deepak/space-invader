@@ -1,6 +1,5 @@
 import pygame
 import random
-
 pygame.init()
 
 # Screen setup
@@ -29,22 +28,22 @@ enemy_y = []
 enemy_x_change = []
 enemy_y_change = []
 num_of_enemies = 6
-
 for i in range(num_of_enemies):
     enemy_imgs.append(pygame.image.load('enemy.png'))
-    enemy_x.append(random.randint(0, 735))
-    enemy_y.append(random.randint(50, 150))
-    enemy_x_change.append(0.15)
-    enemy_y_change.append(40)
+    enemy_x.append(random.randint(0, 735))  # Random starting X position
+    enemy_y.append(random.randint(50, 150))  # Random starting Y position
+    enemy_x_change.append(0.15)  # Horizontal movement speed
+    enemy_y_change.append(40)  # Vertical movement speed (drops per edge touch)
+#ready- bullet is on screen
+#fire- bullet is visible and in motion
 
-# Bullet setup
+#bullet setup
 bullet_img = pygame.image.load('bullet.png')
 bullet_x = 0
-bullet_y = 480
+bullet_y = 480  #starting Y position
 bullet_x_change = 0
-bullet_y_change = 0.5
+bullet_y_change = 0.5 #vertical speed
 bullet_state = "ready"
-
 
 def draw_player(x, y):
     """Draw the player sprite on the screen at position (x, y)"""
@@ -55,94 +54,99 @@ def draw_enemy(x, y, i):
     """Draw the enemy sprite on the screen at position (x, y)"""
     screen.blit(enemy_imgs[i], (x, y))
 
-
-def fire_bullet(x, y):
-    """Fire bullet on the screen using space bar"""
+def fire_bullet(x,y):
+    """fire bullet on the screen using space bar"""
     global bullet_state
     bullet_state = "fire"
-    screen.blit(bullet_img, (x + 16, y + 10))
-
+    screen.blit(bullet_img, (x+16, y+10))
 
 def is_collision(enemy_x, enemy_y, bullet_x, bullet_y):
     """Check for collision between enemy and bullet"""
-    distance = ((enemy_x - bullet_x) ** 2 + (enemy_y - bullet_y) ** 2) ** 0.5
-    return distance < 27
-
-
+    distance = ((enemy_x - bullet_x)**2 + (enemy_y - bullet_y)**2) ** 0.5
+    if distance < 27:
+        return True
+    else:
+        return False
 # Game loop
-score = 0
+score=0
 running = True
-
 while running:
     # Draw the background
     screen.blit(background, (0, 0))
-
+    
     # Handle user input and window events
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
+            # Close the game when user clicks window close button
             running = False
         if event.type == pygame.KEYDOWN:
+            # When user presses a key
             if event.key == pygame.K_LEFT:
+                # Move player left
                 player_x_change = -0.5
             if event.key == pygame.K_RIGHT:
+                # Move player right
                 player_x_change = 0.5
             if event.key == pygame.K_SPACE:
-                if bullet_state == "ready":
+                # move bullet
+                if bullet_state is "ready":
                     bullet_x = player_x
                     fire_bullet(bullet_x, bullet_y)
         if event.type == pygame.KEYUP:
+            # When user releases a key
             if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
+                # Stop player movement
                 player_x_change = 0
-
+    
     # Update player position
     player_x += player_x_change
-
+    
     # Clamp player position to screen boundaries
+    # Keep the player from going off the left edge
     if player_x <= 0:
         player_x = 0
+    # Keep the player from going off the right edge
+    # 736 = 800 (screen width) - 64 (player sprite width)
     elif player_x >= 736:
         player_x = 736
-
+    
     # Update enemy position and movement
+    # Move the enemy horizontally
     for i in range(num_of_enemies):
         enemy_x[i] += enemy_x_change[i]
-
-        # Handle boundary collisions
+    
+    # Clamp enemy position and handle boundary behavior
+    # Keep the enemy from going off the left edge
         if enemy_x[i] <= 0:
             enemy_x[i] = 0
+        # Change direction to move right
             enemy_x_change[i] = 0.15
+        # Move enemy down one step when it reaches the edge
             enemy_y[i] += enemy_y_change[i]
+    # Keep the enemy from going off the right edge
         elif enemy_x[i] >= 736:
             enemy_x[i] = 736
-            enemy_x_change[i] = -0.15
+        # Change direction to move left
+            enemy_x_change[i] = -4
+        # Move enemy down one step when it reaches the edge
             enemy_y[i] += enemy_y_change[i]
-
-        # Check collision with bullet
-        if is_collision(enemy_x[i], enemy_y[i], bullet_x, bullet_y):
+        collision= is_collision(enemy_x[i], enemy_y[i], bullet_x, bullet_y)
+        if collision:
             bullet_y = 480
             bullet_state = "ready"
-            score += 1
-            print(f"Score: {score}")
+            score += 1  
+            print(score)
             enemy_x[i] = random.randint(0, 735)
             enemy_y[i] = random.randint(50, 150)
-
         draw_enemy(enemy_x[i], enemy_y[i], i)
-
     # Render all game objects on screen
     draw_player(player_x, player_y)
+    draw_enemy(enemy_x[i], enemy_y[i], i)
 
-    # Update bullet movement
-    if bullet_state == "fire":
-        bullet_x = player_x + 16
-        screen.blit(bullet_img, (bullet_x, bullet_y))
-        bullet_y -= bullet_y_change
-
-    # Reset bullet when it goes off screen
-    if bullet_y <= 0:
+    #movement of bullet
+    if bullet_y <= 0 :
         bullet_y = 480
         bullet_state = "ready"
-
-    pygame.display.update()
 
     if bullet_state is "fire":
         fire_bullet(bullet_x, bullet_y)
