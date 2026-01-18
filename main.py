@@ -1,4 +1,4 @@
-#aarav
+# Space Invaders Game   
 import pygame
 import random
 pygame.init()
