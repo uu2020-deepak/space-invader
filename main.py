@@ -28,6 +28,17 @@ enemy_y = random.randint(50, 150)  # Random starting Y position
 enemy_x_change = 0.15  # Horizontal movement speed
 enemy_y_change = 40  # Vertical movement speed (drops per edge touch)
 
+#ready- bullet is on screen
+#fire- bullet is visible and in motion
+
+#bullet setup
+bullet_img = pygame.image.load('bullet.png')
+bullet_x = 0
+bullet_y = 480  #starting Y position
+bullet_x_change = 0
+bullet_y_change = 1  #vertical speed
+bullet_state = "ready"
+
 def draw_player(x, y):
     """Draw the player sprite on the screen at position (x, y)"""
     screen.blit(player_img, (x, y))
@@ -37,7 +48,11 @@ def draw_enemy(x, y):
     """Draw the enemy sprite on the screen at position (x, y)"""
     screen.blit(enemy_img, (x, y))
 
-
+def fire_bullet(x,y):
+    """fire bullet on the screen using space bar"""
+    global bullet_state
+    bullet_state = "fire"
+    screen.blit(bullet_img, (x+16, y+10))
 
 
 # Game loop
@@ -59,6 +74,9 @@ while running:
             if event.key == pygame.K_RIGHT:
                 # Move player right
                 player_x_change = 0.1
+            if event.key == pygame.K_SPACE:
+                # move bullet
+                fire_bullet(player_x, bullet_y)
         if event.type == pygame.KEYUP:
             # When user releases a key
             if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
@@ -99,6 +117,15 @@ while running:
     # Render all game objects on screen
     draw_player(player_x, player_y)
     draw_enemy(enemy_x, enemy_y)
+
+    #movement of bullet
+    if bullet_y <= 0 :
+        bullet_y = 480
+        bullet_state = "ready"
+
+    if bullet_state is "fire":
+        fire_bullet(player_x, bullet_y)
+        bullet_y -= bullet_y_change
     
     # Update the display to show all drawn objects
     pygame.display.update()
